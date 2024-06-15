@@ -1,35 +1,99 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from "react";
+import List from "./List";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const added = () => toast.success("Item Added");
+  
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+  const [inputValue, setInputValue] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [completedTasks, setCompletedTasks] = useState([]);
+
+  console.log(completedTasks)
+
+  useEffect(()=>{
+    if(localStorage.getItem("tasks")){
+     let arr = JSON.parse(localStorage.getItem("tasks"));
+     setTasks(arr);
+    }
+    if(localStorage.getItem("completed")){
+      let arr = JSON.parse(localStorage.getItem("completed"));
+      setCompletedTasks(arr);
+     }
+  },[])
+
+
+  useEffect(()=>{
+      localStorage.setItem("completed", JSON.stringify(completedTasks));
+  },[completedTasks])
+
+  
+  useEffect(() => {
+  if (tasks.length >=1)
+      {localStorage.setItem("tasks", JSON.stringify(tasks));}
+  else{
+    localStorage.removeItem("tasks");
+    localStorage.removeItem("completed");
+  }
+  }, [tasks]);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if(inputValue ==''){
+      alert("enter a bud")
+      return
+    }
+      const obj = {};
+      obj.task = inputValue;
+      obj.id = Date.now();
+      setTasks([...tasks, obj]); 
+      setInputValue("");
+  }
+
+  function handleDelete(idToDelete) {
+   toast.success("Item Deleted");
+   setTasks(
+      tasks.filter((task) => {
+        return task.id !== idToDelete;
+      })
+    )
+  }
+
+
+  function handleCompleted(idToMarkComplete) {
+    setCompletedTasks([...completedTasks, idToMarkComplete]);
+  }
+
+  
+
+  return (<>
+ 
+    <ToastContainer/>
+    <div id="grocery">
+      <h1>Grocery Bud</h1>
+      <form action="" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+        />
+        <button id="add" type="submit" onClick={added}>
+          Add Item
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+      </form>
 
-export default App
+      <List
+        handleCompleted={handleCompleted}
+        handleDelete={handleDelete}
+        tasks={tasks}
+        completedTasks={completedTasks}
+      />
+    </div>
+    </>
+  );
+}
+export default App;
